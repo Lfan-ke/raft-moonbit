@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>raft-moonbit · Raft consensus, in MoonBit</title>
+    <meta
+      name="description"
+      content="A production-grade Raft consensus library in MoonBit — a faithful port of etcd's raft, with 362 tests, formal safety-invariant checks, and a live in-browser demo where every node runs real WebAssembly in its own Web Worker."
+    />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='13' font-size='13'%3E%E2%9A%96%3C/text%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="assets/site.css" />
+    <script src="assets/nav.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="wrap row">
+        <a class="brand" href="./"
+          ><span class="prompt">~/</span>raft-moonbit<span class="caret"
+            >▊</span
+          ></a
+        >
+        <nav class="links">
+          <a href="./">Home</a>
+          <a href="quickstart.html">Quickstart</a>
+          <a href="api.html">API</a>
+          <a href="demo.html">Demo</a>
+          <a href="design.html">Design</a>
+        </nav>
+        <span class="spacer"></span>
+        <button class="iconbtn" data-theme-toggle></button>
+        <button class="iconbtn" data-burger aria-label="Toggle menu">≡</button>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <section class="hero">
+        <p class="eyebrow">Consensus · MoonBit · WebAssembly</p>
+        <h1 class="display">
+          A cluster that stays<br />
+          in <span class="hl">agreement</span> —<br />
+          even when it shouldn't.<span class="caret">▊</span>
+        </h1>
+        <p class="lede">
+          Raft is how replicated systems keep one true log through crashes,
+          partitions, and dropped mail. This is a faithful MoonBit port of
+          etcd's raft — the same protocol behind etcd, TiKV and Consul — with the
+          algebra of the language doing work the Go original left to convention.
+        </p>
+        <div class="cta">
+          <a class="btn primary" href="demo.html">▶ Watch it run</a>
+          <a class="btn" href="quickstart.html">Quickstart</a>
+          <a class="btn" href="https://github.com/Lfan-ke/raft-moonbit"
+            >Source ↗</a
+          >
+        </div>
+
+        <div style="margin-top: 40px" class="badges">
+          <span class="badge"><span class="dot"></span> CI <b>passing</b></span>
+          <span class="badge"><b>362</b> tests · 0 failing</span>
+          <span class="badge">targets <b>wasm · wasm-gc · js</b></span>
+          <span class="badge">mooncakes <b>Lfan-ke/raft-moonbit</b></span>
+          <span class="badge">Apache-2.0</span>
+        </div>
+      </section>
+
+      <section class="band" style="border-top: none; padding-top: 8px">
+        <div class="hero-demo">
+          <div class="ring-card card">
+            <div class="tag" style="margin-bottom: 14px">
+              cluster snapshot · term 3
+            </div>
+            <div class="ring">
+              <div class="node leader"><span>S2</span><em>leader</em></div>
+              <div class="node follower"><span>S1</span><em>follower</em></div>
+              <div class="node follower"><span>S3</span><em>follower</em></div>
+              <div class="node follower"><span>S4</span><em>follower</em></div>
+              <div class="node learner"><span>S5</span><em>learner</em></div>
+            </div>
+            <div class="legend">
+              <span class="chip leader"><span class="dot"></span>Leader</span>
+              <span class="chip follower"><span class="dot"></span>Follower</span>
+              <span class="chip candidate"
+                ><span class="dot"></span>Candidate</span
+              >
+              <span class="chip learner"
+                ><span class="dot"></span>Learner · non-voting</span
+              >
+            </div>
+          </div>
+          <div class="log-card card">
+            <div class="tag" style="margin-bottom: 14px">
+              replicated log · committed to index 6
+            </div>
+            <div class="ledger">
+              <span class="cell committed"
+                ><span class="idx">01</span><span class="tm">t1</span>noop</span
+              >
+              <span class="cell committed"
+                ><span class="idx">02</span><span class="tm">t1</span>set
+                x=1</span
+              >
+              <span class="cell committed"
+                ><span class="idx">03</span><span class="tm">t2</span>noop</span
+              >
+              <span class="cell committed"
+                ><span class="idx">04</span><span class="tm">t2</span>put a</span
+              >
+              <span class="cell committed"
+                ><span class="idx">05</span><span class="tm">t3</span>noop</span
+              >
+              <span class="cell committed"
+                ><span class="idx">06</span><span class="tm">t3</span>put b</span
+              >
+              <span class="cell"
+                ><span class="idx">07</span><span class="tm">t3</span>put
+                c<span class="caret">▊</span></span
+              >
+            </div>
+            <p style="color: var(--ink-2); font-size: 14px; margin: 18px 0 0">
+              Every committed entry is agreed by a majority before it counts. The
+              term stamp (<span class="tm" style="color: var(--leader)"
+                >t1..t3</span
+              >) records which leadership era wrote it — the ordering key that
+              makes the log a single, undisputed history.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="band">
+        <p class="kicker">What it covers</p>
+        <h2 class="sec">A complete Raft, not a sketch</h2>
+        <p class="sub">
+          Election, replication, membership, persistence, reads — the parts most
+          teaching implementations skip are the parts that decide correctness
+          under failure. All of it is here, and all of it is tested.
+        </p>
+        <div class="grid c3">
+          <div class="card">
+            <div class="rule-accent"></div>
+            <h3>Leader election</h3>
+            <p>
+              Follower / Candidate / Leader roles, the up-to-date-log voting
+              restriction (§5.4.1), pre-vote so a partitioned node can't inflate
+              the term, and randomized timeouts off a per-node PRNG.
+            </p>
+          </div>
+          <div class="card">
+            <div class="rule-accent" style="background: var(--follower)"></div>
+            <h3>Log replication</h3>
+            <p>
+              AppendEntries with the log-matching check, conflicting-suffix
+              truncation, one-jump backoff via <code>conflict_index</code>, and
+              per-follower progress (probe / replicate / snapshot).
+            </p>
+          </div>
+          <div class="card">
+            <div class="rule-accent" style="background: var(--candidate)"></div>
+            <h3>Membership &amp; joint consensus</h3>
+            <p>
+              Single-server add/remove and full C(old,new) joint consensus (§6),
+              carried as <code>ConfChange</code> entries and folded in by a
+              configuration state machine.
+            </p>
+          </div>
+          <div class="card">
+            <div class="rule-accent" style="background: var(--leader)"></div>
+            <h3>Persistence &amp; recovery</h3>
+            <p>
+              A <code>HardState</code>, an append-only write-ahead log with
+              replay, and an etcd-style <code>MemoryStorage</code> engine with
+              compaction, snapshots and a storage-backed recovery path.
+            </p>
+          </div>
+          <div class="card">
+            <div class="rule-accent" style="background: var(--replicate)"></div>
+            <h3>Reads &amp; transfer</h3>
+            <p>
+              Linearizable ReadIndex / leader-lease reads, check-quorum so a
+              cut-off leader steps down, and orderly leadership transfer via
+              <code>TimeoutNow</code> (§3.10).
+            </p>
+          </div>
+          <div class="card">
+            <div class="rule-accent" style="background: var(--bad)"></div>
+            <h3>Deterministic chaos</h3>
+            <p>
+              A single-seed simulator that drops, delays, reorders, partitions
+              and crashes nodes — with built-in checks for the Raft safety
+              invariants and a full chaos suite.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="band">
+        <p class="kicker">Why this one</p>
+        <h2 class="sec">The types did the auditing</h2>
+        <p class="sub">
+          Porting from Go was not transcription. MoonBit's algebraic data types
+          and exhaustive matching turned three latent correctness gaps in the
+          reference into compile-time-visible cases — including one that could
+          elect two leaders in a single term.
+        </p>
+        <div class="grid c2">
+          <div class="card">
+            <h3>
+              <span class="chip" style="border-color: var(--bad)">B1</span>
+              Two leaders, one term
+            </h3>
+            <p>
+              A reordered, stale <code>VoteResp</code> was being counted into a
+              false majority. Replacing the term check with an exhaustive
+              <code>TermRel</code> match made "message from an older term" a case
+              you cannot forget to handle. Election Safety restored.
+              <a href="design.html">Read the write-up →</a>
+            </p>
+          </div>
+          <div class="card">
+            <h3>
+              <span class="chip" style="border-color: var(--warn)">S2</span>
+              Compacted vs. unavailable
+            </h3>
+            <p>
+              The old storage returned the same <code>None</code> for "index was
+              compacted away" and "index past the end" — so a caller couldn't
+              tell whether to snapshot or wait. A <code>StorageError</code> ADT
+              made the two states impossible to conflate.
+              <a href="design.html">Read the write-up →</a>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="band">
+        <p class="kicker">See for yourself</p>
+        <h2 class="sec">Real consensus, running in your browser</h2>
+        <p class="sub">
+          The demo isn't a JavaScript re-implementation and isn't a
+          single-threaded animation. Each of the five nodes is a separate
+          WebAssembly instance in its own Web Worker, ticking on its own timer,
+          exchanging messages through <code>postMessage</code> — genuinely
+          concurrent, genuinely non-deterministic. Cut the network and watch two
+          terms diverge; heal it and watch them reconcile.
+        </p>
+        <div class="cta">
+          <a class="btn primary" href="demo.html">▶ Open the live demo</a>
+          <a class="btn" href="api.html">Browse the API</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site">
+      <div class="wrap row">
+        <span
+          >Raft consensus in <b>MoonBit</b> · a port of
+          <a href="https://github.com/etcd-io/raft">etcd-io/raft</a> ·
+          Apache-2.0</span
+        >
+        <span class="mono"
+          >© 2026 Leo Cheng ·
+          <a href="https://github.com/Lfan-ke/raft-moonbit">GitHub</a> ·
+          <a href="https://gitlink.org.cn/heke1228/raft-moonbit">GitLink</a></span
+        >
+      </div>
+    </footer>
+
+    <style>
+      .hero-demo {
+        display: grid;
+        grid-template-columns: 340px 1fr;
+        gap: 16px;
+        align-items: stretch;
+      }
+      .ring {
+        position: relative;
+        height: 260px;
+        margin: 6px auto 18px;
+        width: 260px;
+      }
+      .node {
+        position: absolute;
+        width: 62px;
+        height: 62px;
+        border-radius: 50%;
+        display: grid;
+        place-content: center;
+        text-align: center;
+        font-family: var(--mono);
+        border: 2px solid var(--border-strong);
+        background: var(--surface-2);
+        transform: translate(-50%, -50%);
+      }
+      .node span {
+        font-weight: 700;
+        font-size: 15px;
+        color: var(--ink);
+      }
+      .node em {
+        font-style: normal;
+        font-size: 9.5px;
+        color: var(--ink-3);
+        display: block;
+      }
+      .node.leader {
+        left: 50%;
+        top: 8%;
+        border-color: var(--leader);
+        box-shadow: 0 0 0 4px color-mix(in oklab, var(--leader) 22%, transparent);
+        animation: beat 1.8s ease-in-out infinite;
+      }
+      @keyframes beat {
+        0%,
+        100% {
+          box-shadow: 0 0 0 4px
+            color-mix(in oklab, var(--leader) 22%, transparent);
+        }
+        50% {
+          box-shadow: 0 0 0 9px color-mix(in oklab, var(--leader) 8%, transparent);
+        }
+      }
+      .node.leader em {
+        color: var(--leader);
+      }
+      .node.follower:nth-of-type(2) {
+        left: 90%;
+        top: 40%;
+        border-color: var(--follower);
+      }
+      .node.follower:nth-of-type(3) {
+        left: 74%;
+        top: 92%;
+        border-color: var(--follower);
+      }
+      .node.follower:nth-of-type(4) {
+        left: 26%;
+        top: 92%;
+        border-color: var(--follower);
+      }
+      .node.learner {
+        left: 10%;
+        top: 40%;
+        border-style: dashed;
+        border-color: var(--learner);
+      }
+      .node.learner em {
+        color: var(--learner);
+      }
+      .legend {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      @media (max-width: 860px) {
+        .hero-demo {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </body>
+</html>
